@@ -1,0 +1,12 @@
+# Flutter-related
+**/Flutter/ephemeral/
+**/Pods/
+
+# macOS 端插件全部是 Swift Packages，Flutter 会直接走 SPM；
+# 不要提交 CocoaPods 集成（会多出 [CP] Check Pods Manifest.lock 阶段并卡签名）。
+/Podfile
+/Podfile.lock
+
+# Xcode-related
+**/dgph
+**/xcuserdata/

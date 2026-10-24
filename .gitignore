@@ -1,0 +1,78 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+**/.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+**/build/
+/coverage/
+
+# macOS / CocoaPods
+/macos/Pods/
+/macos/.symlinks/
+/macos/Flutter/ephemeral/
+**/*.xcworkspace/xcuserdata/
+**/*.xcodeproj/xcuserdata/
+
+# 预编译的 llama.cpp / TTS 原生库（Android arm64/x64、Windows x64，约 208MB）。
+# macOS 走 SwiftPM companion，不需要这里；需要 Android/Windows 原生 TTS 时
+# 见 native/README.md。
+/native/bundle/
+
+# 本地脚本/临时探针的产物 + 项目记忆 / 编辑器工作区（不进仓库）
+/.workbuddy/
+/.vscode/
+/.ix_tree.json
+/.ksu_tree.json
+/.ksu_home.kt
+/.tmp_colors.kt
+/.flutter
+/.flutter_tool_state
+/test/tmp_probe/
+/web.pid
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# 本地交付截图 / 构建产物（不提交）
+/macos-screenshots/
+
+# 误生成的 Linux 脚手架残片（只有 linux/flutter/generated_*，没有 CMakeLists/runner）。
+# 以后真要做 Linux 端时删掉这一行。
+/linux/

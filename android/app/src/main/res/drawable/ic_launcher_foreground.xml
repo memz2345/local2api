@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 前景：双向转发箭头（108dp 视口，中心 66dp 安全区内） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 上箭头：向右 -->
+    <path
+        android:pathData="M38,44 L64,44 M56,36 L64,44 L56,52"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 下箭头：向左 -->
+    <path
+        android:pathData="M70,64 L44,64 M52,56 L44,64 L52,72"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 中心连接点 -->
+    <path
+        android:pathData="M54,54 m-3.2,0 a3.2,3.2 0 1,1 6.4,0 a3.2,3.2 0 1,1 -6.4,0"
+        android:fillColor="#FFFFFF" />
+</vector>

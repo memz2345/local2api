@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is off -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <!-- Show a splash screen on the activity. Automatically removed when
+             the Flutter engine draws its first frame -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+    <!-- Theme applied to the Android Window as soon as the process has started.
+         This theme determines the color of the Android Window while your
+         Flutter UI initializes, as well as behind your Flutter UI while its
+         running.
+
+         This Theme is only used starting with V2 of Flutter's Android embedding. -->
+    <!-- ⚠️ 必须是 Material 系主题（不是 @android:style/Theme.Light）。
+         内置 WebView 里的「原生」控件全从 Activity 主题取样式：
+           · <select> 弹窗 = AlertDialog + android.R.layout.select_dialog_singlechoice
+           · 滚动条 = View 的 scrollbarThumbVertical / scrollbarSize
+           · 文本选择手柄、ActionMode、文件选择器同理
+         用 Theme.Light（Android 1.x 的老主题）时这些都是 Holo 之前的灰脸 ——
+         也就是「安卓 2.x 样式」的根因。换成 Material 后回退路径也现代化，
+         再叠一层网页内 shim（滚动条 CSS + <select> 接管）才彻底。 -->
+    <style name="NormalTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+        <!-- WebView 的 <select> / 系统 AlertDialog 走这个主题 -->
+        <item name="android:alertDialogTheme">@style/AppAlertDialogTheme</item>
+        <!-- 与旧主题保持一致：状态栏 / 导航栏纯黑（Android 15+ 强制 edge-to-edge 时系统忽略） -->
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+    </style>
+
+    <style name="AppAlertDialogTheme" parent="@android:style/Theme.Material.Light.Dialog.Alert">
+        <item name="android:colorAccent">@color/browser_accent</item>
+    </style>
+</resources>

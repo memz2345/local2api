@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="splash_background">#FCFCFF</color>
+    <color name="ic_launcher_background">#4C6FFF</color>
+    <!-- 系统 AlertDialog / WebView <select> 弹窗的强调色（品牌蓝） -->
+    <color name="browser_accent">#4C6FFF</color>
+</resources>

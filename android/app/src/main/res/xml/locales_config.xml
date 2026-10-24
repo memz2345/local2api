@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 13+ per-app language 支持的应用语言清单 -->
+<!--
+  中文必须同时声明 **script 形式**（zh-Hans-CN / zh-Hant-TW）与 **region 形式**
+  （zh-CN / zh-TW）：Android 的 Locale 会对中文按 likely-subtags 规范化补上
+  script（zh-CN → zh-Hans-CN），一些 OEM 的「应用语言」按规范化后的 tag 与
+  这里做字符串比对 —— 只写 region 形式时，规范化结果对不上，中文选项就被
+  静默丢掉，只剩 en-US（它没有 likely script，规范化后不变）能生效。
+  两边都列，两种方向的 ROM 都能匹配上；清单只决定系统「应用信息」里
+  列出哪些语言，应用内的解析归 Dart 侧归一化（AppSettings.normalizeLocaleCode）。
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="zh-Hans-CN" />
+    <locale android:name="zh-CN" />
+    <locale android:name="zh-Hant-TW" />
+    <locale android:name="zh-TW" />
+    <locale android:name="en-US" />
+</locale-config>

@@ -1,0 +1,8 @@
+include: package:flutter_lints/flutter.yaml
+
+# vendored 第三方包不走本仓库的 lint（上游代码保持原样，同 NaviFlash）。
+# build/ 是生成目录：里面的 _stale 备份、插件符号链接不该被扫描。
+analyzer:
+  exclude:
+    - third_party/**
+    - build/**

@@ -1,0 +1,168 @@
+name: macOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.workbuddy/**'
+
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-smoke:
+    runs-on: macos-14
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.9'
+          channel: stable
+          architecture: arm64
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Toolchain info
+        run: |
+          flutter --version
+          flutter doctor -v
+          node --version
+          npm --version
+          pod --version
+
+      - name: Install Dart dependencies
+        run: flutter pub get
+
+      # 预先装好 DSH：集成测试只验证「应用能把它拉起来」，不重复测 npm。
+      # DSH 自己的依赖里有 node-pty 这类原生包，macOS runner 有 Xcode CLT，
+      # 正常 install 脚本能跑通；失败时日志会直接带 npm 的 stderr。
+      - name: Install DeepSeek Harness
+        env:
+          npm_config_registry: https://registry.npmjs.org
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/dsh-app"
+          cd "$RUNNER_TEMP/dsh-app"
+          printf '{"name":"local2api-dsh-ci","private":true}\n' > package.json
+          npm install @deepseek-ai/dsh --omit=dev --no-audit --no-fund --loglevel=error
+          test -f node_modules/@deepseek-ai/dsh/lib/bin.js
+
+      - name: Build macOS app (release)
+        run: flutter build macos --release
+
+      - name: Run DSH smoke test (macOS window + screenshots)
+        env:
+          L2A_DSH_DIR: ${{ runner.temp }}/dsh-app
+          L2A_SHOT_DIR: ${{ github.workspace }}/build/macos_shots
+          DSH_HOME: ${{ runner.temp }}/dsh-home
+          DSH_AGENTS_HOME: ${{ runner.temp }}/dsh-agents
+        run: |
+          set -euo pipefail
+          mkdir -p "$L2A_SHOT_DIR" "$DSH_HOME" "$DSH_AGENTS_HOME"
+          flutter test integration_test/macos_dsh_smoke_test.dart -d macos \
+            --reporter expanded
+
+      # 真网实测：miuix + Zen 免费车道 minimax 识别系统信息。
+      # 这一步会请求 opencode.ai，可能受出口地区/额度影响，所以不阻塞发版；
+      # 失败时截图和日志仍然会留在 artifact 里。
+      - name: Live Zen minimax system-info test (miuix, best effort)
+        continue-on-error: true
+        env:
+          L2A_DSH_DIR: ${{ runner.temp }}/dsh-app
+          L2A_SHOT_DIR: ${{ github.workspace }}/build/macos_shots
+          # 独立的 home：上一轮假上游测试会留下一个 ci-model 的旧会话，
+          # 复用 home 会打开旧会话、模型对不上。这里从零开始。
+          DSH_HOME: ${{ runner.temp }}/dsh-home-live
+          DSH_AGENTS_HOME: ${{ runner.temp }}/dsh-agents-live
+        run: |
+          set -euo pipefail
+          mkdir -p "$L2A_SHOT_DIR" "$DSH_HOME" "$DSH_AGENTS_HOME"
+          flutter test integration_test/macos_zen_minimax_test.dart -d macos \
+            --reporter expanded
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dsh-screenshots
+          path: build/macos_shots/**
+          if-no-files-found: warn
+
+      - name: Package unsigned app
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ ! -d build/macos/Build/Products/Release/Local2API.app ]; then
+            echo "No release app (the build failed); skipping package step."
+            exit 0
+          fi
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/macos/Build/Products/Release/Local2API.app \
+            "$RUNNER_TEMP/Local2API-macos-arm64.zip"
+
+      - name: Build Intel-only app (x86_64, for Hackintosh / Intel Macs)
+        if: always()
+        run: |
+          set -euo pipefail
+          SRC="build/macos/Build/Products/Release/Local2API.app"
+          if [ ! -d "$SRC" ]; then
+            echo "No release app (the build failed); skipping x86_64 step."
+            exit 0
+          fi
+          APP="$RUNNER_TEMP/Local2API-x86_64.app"
+          rm -rf "$APP"
+          cp -R "$SRC" "$APP"
+
+          # Flutter's release app is already a universal binary; thin every
+          # Mach-O to x86_64 so Intel/Hackintosh machines get a native slice
+          # instead of relying on Rosetta (which doesn't exist there).
+          # Thin into a temp dir outside the bundle so find never sees its
+          # own output.
+          THIN_DIR="$RUNNER_TEMP/lipo-thin"
+          rm -rf "$THIN_DIR"
+          mkdir -p "$THIN_DIR"
+          i=0
+          find "$APP" -type f -print0 | while IFS= read -r -d '' f; do
+            if file -b "$f" | grep -q 'Mach-O'; then
+              if lipo -info "$f" 2>/dev/null | grep -q 'x86_64'; then
+                i=$((i + 1))
+                lipo -thin x86_64 "$f" -output "$THIN_DIR/$i"
+                mv "$THIN_DIR/$i" "$f"
+                chmod +x "$f"
+              fi
+            fi
+          done
+
+          codesign --force --deep --sign - \
+            --preserve-metadata=entitlements "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" \
+            "$RUNNER_TEMP/Local2API-macos-x86_64.zip"
+
+      - name: Upload macOS app (universal arm64 + x86_64)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Local2API-macos-universal
+          path: ${{ runner.temp }}/Local2API-macos-arm64.zip
+          if-no-files-found: warn
+
+      - name: Upload macOS app (Intel-only x86_64)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Local2API-macos-x86_64
+          path: ${{ runner.temp }}/Local2API-macos-x86_64.zip
+          if-no-files-found: warn

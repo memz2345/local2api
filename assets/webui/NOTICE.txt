@@ -1,0 +1,16 @@
+临时 WebUI 用的第三方前端资源（跟 App 一起打包，离线可用，不走 CDN）：
+
+mdui.css / mdui.global.js
+    mdui 2.1.5 —— 实现 Material Design 3（Material You）的 Web Components 组件库
+    https://www.mdui.org
+    MIT License, Copyright (c) 2016-2026 zdhxiong <zdhxiong@gmail.com>
+    来源：https://unpkg.com/mdui@2/mdui.css 、 https://unpkg.com/mdui@2/mdui.global.js
+
+material-icons.woff2
+    Material Icons 字体（mdui 的图标组件依赖它）
+    https://fonts.google.com/icons
+    Apache License 2.0
+    来源：https://fonts.gstatic.com/s/materialicons/v145/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2
+
+升级方式：从上面的 URL 重新下载覆盖，然后跑 `flutter test test/webui_server_test.dart`
+确认页面节点没变（HTML 在 lib/services/webui_server.dart 的 kWebUiHtml 里）。

@@ -1,0 +1,151 @@
+name: local2api
+description: "Local2API - 把局域网/VPN 的 llama.cpp、Ollama 或任意 OpenAI 兼容接口转发成带鉴权的一层新 API。"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+  # Zen 免密车道的 ses_/msg_ id 要从会话种子做确定性派生
+  crypto: ^3.0.7
+
+  # 配置持久化
+  shared_preferences: ^2.2.2
+
+  # M3E 加载动画的形状/形变库（纯 Dart）
+  material_new_shapes: ^1.0.0
+
+  # 液态玻璃组件（NaviFlash vendored 0.30.2，含底栏拖拽崩溃补丁）
+  liquid_glass_widgets:
+    path: third_party/liquid_glass_widgets
+
+  # 原生 toast + 显示设置（SmartDialog 锁 5.1.1：5.2.0+ 当前 SDK 编译不过，同 NaviFlash）
+  flutter_smart_dialog: 5.1.1
+  fluttertoast: ^10.0.0
+  dynamic_color: ^1.6.8
+  flex_seed_scheme: ^4.0.1
+  image: ^4.1.3
+  image_picker: ^1.0.4
+  flutter_colorpicker: ^1.1.0
+  provider: ^6.1.5
+  material_color_utilities: any
+
+  # HyperOS 风格组件库（InstallerX 用的 top.yukonga.miuix.kmp 的 Flutter 移植），
+  # 双风格 UI 的 miuix 那一套；要求 Dart ^3.12.2。
+  flutter_miuix: ^1.3.0
+
+  # 发现页导入本地配置档案文件（版本同 NaviFlash，本机已验证）
+  file_picker: ^10.3.10
+
+  # 二维码：mobile_scanner 扫码（MLKit，仅移动端），qr_flutter 生成，
+  # permission_handler 管相机权限（拒绝后引导去系统设置）
+  mobile_scanner: ^7.0.1
+  qr_flutter: ^4.1.0
+  permission_handler: ^12.0.1
+
+  # 生物识别锁（Hail 同款应用锁，Android FragmentActivity + BiometricPrompt）
+  local_auth: ^2.3.0
+
+  # 解压实验室下载的服务包（SillyTavern 的 zip）
+  archive: ^4.5.2
+
+  # 读 DeepSeek Harness 的 cordis.patch.yml（只解析，不重排整个文件）
+  yaml: ^3.1.2
+
+  # 打开外部链接（Tailscale 下载页等）
+  url_launcher: ^6.3.1
+
+  # 内置浏览器（移植自 NaviFlash 的 browser_page）：
+  #   · Android/iOS → webview_flutter（系统 WebView / WKWebView）
+  #   · Windows     → vendored webview_windows（WebView2；SDK 约束放宽到 ^4，
+  #                   并复用本机已缓存的 nuget 包，见 third_party 内说明）
+  webview_flutter: ^4.14.1
+  webview_flutter_android: ^4.14.1
+  webview_windows:
+    path: third_party/webview_windows
+
+  # 屏幕帧率（preferredDisplayModeId，自 NaviFlash 移植；仅 Android 生效）
+  flutter_displaymode: ^0.7.0
+  speech_to_text: ^7.5.0
+
+  # 本地 TTS（Qwen3-TTS，自 NaviFlash 移植）：llamadart 跑 GGUF 推理，
+  # third_party/llamadart 是 vendored 补丁版（高通 Hexagon NPU 档位），
+  # 原生库经下方 hooks 的 llamadart_native_path 指向 native/bundle。
+  llamadart:
+    path: third_party/llamadart
+  llamadart_llama_cpp_flutter: 0.0.18
+
+  # TTS 模型下载/落盘与 SoC 探测（NPU 判定）、原生日志 FFI、朗读试听
+  path_provider: ^2.1.1
+  path: ^1.9.0
+  http: ^1.1.0
+  device_info_plus: ^12.4.0
+  ffi: ^2.1.3
+  audioplayers: ^6.1.0
+  sherpa_onnx: ^1.13.8
+  record: ^7.1.2
+
+  # Windows 桌面端：托盘图标（tray_manager）+ 窗口关闭接管（window_manager）。
+  # 两者只在 Windows 上 init（WindowService.isSupported），移动端零开销。
+  # ⚠️ window_manager 要求 windows/runner/main.cpp 里 SetQuitOnClose(false)，
+  #    否则原生层抢先把 WM_CLOSE 吃掉，Dart 侧拿不到关闭事件。
+  tray_manager: ^0.5.3
+  window_manager: ^0.5.2
+
+# shared_preferences_android 2.5.0 把 Pigeon 调用改成了 jni 反射，R8 一混淆
+# 就 NoSuchMethodError（SharedPreferencesApiRegistrar.getAll），release 包
+# 直接卡死在启动页。钉回 2.4.28（方法通道实现，R8 安全，HEAD 已验证）。
+dependency_overrides:
+  shared_preferences_android: 2.4.28
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  # 临时 WebUI 的前端资源：mdui 2 组件库（MIT）+ Material Icons 字体。
+  # 打进包是为了让 WebUI 离线也能用，不去 CDN 拉。
+  assets:
+    - assets/webui/
+    - assets/lab/
+    # Windows 托盘图标（tray_manager 从 flutter_assets 里按路径加载 .ico）
+    - assets/tray_icon.ico
+    # 开源许可页的版本徽标：LicenseRegistry 只有包名没有版本，这里补一份 lock
+    # （根目录的 pubspec.lock 直接声明成 asset，随构建自动是最新的）。
+    - pubspec.lock
+
+  # 关于页的「效果背景」着色器（InstallerX 同款，构建期由 impellerc 编译，
+  # 运行时 FragmentProgram.fromAsset('shaders/bg_effect.frag') 加载）
+  shaders:
+    - shaders/bg_effect.frag
+
+# llamadart native assets 覆写（同 NaviFlash）：
+# - llamadart_native_path 指向仓库内预置的原生 bundle 根目录，
+#   hook 会在其下按 <平台>/ 找各平台产物（android-arm64、android-x64、
+#   windows-x64），缺失时 hook 报错（不再走网络下载）。
+# - android-arm64 选择 hexagon（libggml-hexagon.so）与 htp
+#   （libggml-htp-v*.so FastRPC skel）后端，即高通 NPU 路径；
+#   缺失时原生侧加载期自动回退 cpu。
+hooks:
+  user_defines:
+    llamadart:
+      llamadart_native_path: native/bundle
+      llamadart_native_backends:
+        platforms:
+          android-arm64:
+            backends: [cpu, vulkan, hexagon, htp]
+          windows-x64:
+            backends: [cpu, vulkan]
